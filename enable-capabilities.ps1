@@ -9,7 +9,9 @@ $text = Get-Content -Raw -LiteralPath $settings
 $gpt = '{ off: null, minimal: minimal, low: low, medium: medium, high: high, xhigh: xhigh }'
 $gemini = '{ off: null, minimal: minimal, low: low, medium: medium, high: high }'
 $text = [regex]::Replace($text, '(?m)(\{ id: gpt-image-[^,}]+(?:, name: [^,}]+)?)( \})', ('$1, reasoningEfforts: false$2'))
-$text = [regex]::Replace($text, '(?m)(\{ id: (?:gpt-|codex-)[^,}]+(?:, name: [^,}]+)?)( \})(?!.*reasoningEfforts)', ('$1, reasoningEfforts: ' + $gpt + '$2'))
 $text = [regex]::Replace($text, '(?m)(\{ id: gemini-[^,}]+(?:, name: [^,}]+)?)( \})(?!.*reasoningEfforts)', ('$1, reasoningEfforts: ' + $gemini + '$2'))
-Set-Content -LiteralPath $settings -Value $text -Encoding UTF8
-Write-Host 'Reasoning capabilities enabled for matching GPT and Gemini models.'
+# Apply the full reasoning map to every non-image model, including custom
+# gateway IDs (for example: claude-*, qwen-*, deepseek-*, moonshot-*, or vendor-specific IDs).
+$text = [regex]::Replace($text, '(?m)(\{ id: (?!gpt-image-)(?!gemini-)[^,}]+(?:, name: [^,}]+)?)( \})(?!.*reasoningEfforts)', ('$1, reasoningEfforts: ' + $gpt + '$2'))
+Set-Content -LiteralPath $settings -Value $text -Encoding UTF8 -NoNewline
+Write-Host 'Reasoning capabilities enabled for matching non-image models.'
