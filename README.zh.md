@@ -8,7 +8,8 @@
 
 <img width="432" height="194" alt="image" src="https://github.com/user-attachments/assets/00198ec6-a8eb-4002-91b7-0149b8621f32" />
 注：原版导入其他模型无思考等级可选
-<img width="432" height="194" alt="image" src="https://github.com/user-attachments/assets/57aecb45-596c-40a2-96eb-f73db2fb0634" />
+<img width="390" height="197" alt="image" src="https://github.com/user-attachments/assets/9a6f9406-2262-469e-a081-1d504c7bf2b3" />
+
 
 ## 安装（插件市场）
 
