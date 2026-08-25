@@ -2,12 +2,12 @@
 
 这是一个可安装、可卸载的 DSH bundle。它不覆盖 Harness 核心文件；provider 原生参数转换继续由宿主自带 `dsh-llm-pi-ai` 负责。
 
-插件为 DeepSeek Harness 中的 GPT、Codex、Gemini 和 OpenAI-compatible 模型按模型暴露推理等级（`off` / `minimal` / `low` / `medium` / `high` / `xhigh`），让自定义模型网关接入后也能选择合适的推理强度。
+插件为 DeepSeek Harness 中自定义网关中导入的 GPT、Codex、Gemini 和 OpenAI-compatible 模型按模型暴露推理等级（`off` / `minimal` / `low` / `medium` / `high` / `xhigh`），让自定义模型网关接入后也能选择合适的推理强度。
 
 # 效果图
 
 <img width="432" height="194" alt="image" src="https://github.com/user-attachments/assets/00198ec6-a8eb-4002-91b7-0149b8621f32" />
-注：原版导入其他模型无思考等级可选
+注：自定义网关导入其他模型无思考等级可选
  <img width="390" height="197" alt="image" src="https://github.com/user-attachments/assets/9a6f9406-2262-469e-a081-1d504c7bf2b3" />
 
 
