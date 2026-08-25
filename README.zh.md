@@ -89,6 +89,45 @@ dsh plugin remove dsh-more-models-thinking-level
 
 - **尚待完善的市场化工作。** 可配置的 profile 名称、把能力配置迁移到 DSH Settings API、针对 GPT / Gemini / 普通模型的自动化测试、网关拒绝参数时的明确错误提示、以及移除对早期核心运行时补丁的依赖等，都仍未完成。
 
+
+## 网关兼容性
+
+本插件只声明模型能力，实际请求由宿主 `dsh-llm-pi-ai` 按路由的 `api` 发送。当路由使用 `openai-responses` 协议时，DSH 会把之前的历史 assistant 回复重放为不同的 `input` 项，而它构造的 message 项会带有 `status` 字段（例如 `status: "completed"`），推理项也可能带 `status`。
+
+部分中转 / 网关用固定 schema 校验 Responses API 请求，会把这类字段当作未知参数拒绝。典型的报错形如：
+
+```
+invalid_request_error: [ObjectParam] [input[148].status] [unknown_parameter] Unknown parameter: 'input[148].status'
+```
+
+如果你遇到这个报错，它属于**宿主 / 路由与网关之间的字段兼容问题**，不是插件的责任。按优先级可这样处理：
+
+- 若中转支持 `/v1/chat/completions`，把该路由的 `api` 改为 `openai-completions`；该请求结构不带这些 item 级字段。注意推理的 wire 值格式会变，需重新确认等级映射是否正常。
+- 升级或放宽网关（较早的 relay 版本把 Responses input 上的 `status` 当未知参数拒绝，上游已修复，例如 LiteLLM）。
+- 应急起见，新开会话 / 让历史短一些，避免触发校验的那条消息被重放。
+
+## 常见问题 / 故障排查
+
+- **从 npm 装完，但模型设置里还是没有推理等级。** npm 安装只注册 bundle。请针对目标 profile 运行 `enable-capabilities.ps1`，然后重启 DSH。
+- **选了等级后报 `invalid_request_error ... input[N].status`。** 见“网关兼容性”——这是路由 / 网关的字段兼容问题，不是等级映射问题。
+- **为什么我的中转站 GPT 模型完全没有推理等级？** 不在 DSH 内置目录的模型默认按“无推理能力”处理；辅助脚本会补上缺失的 `reasoningEfforts`。见“为什么需要这个插件”。
+- **默认推理等级是 `medium`，怎么改？** 编辑 `~/.dsh/settings.yaml` 里对应 provider 的 `reasoning:` 字段（脚本默认设为 `medium`，且卸载后仍会保留）。
+- **我卸载了，但 `reasoningEfforts` / `reasoning: medium` 还在。** 脚本是就地改写 `settings.yaml` 的。运行 `disable-capabilities.ps1` 可去掉脚本写入的声明。
+- **什么时候不需要这个插件？** 用官方 provider + 标准目录 ID（例如 `gpt-5.4`、`o3`）时；它们本来就声明了推理能力。
+
+## 进阶：手动调整 reasoningEfforts
+
+等级选择完全由模型的 `reasoningEfforts` 驱动。你可以直接编辑 `~/.dsh/settings.yaml`，例如：
+
+```yaml
+reasoningEfforts:
+  off: null
+  low: "low"
+  medium: "medium"
+  high: "high"
+```
+
+每个键是选择器显示的逻辑等级，每个值是对应等级宿主要发送的 wire 值。`off` 为 `null` 表示“省略推理参数”，`false` 表示该模型不支持推理。模型若没有（或为空的）`reasoningEfforts`，会保持宿主默认——对自定义网关模型来说就是“无推理能力”。所以手动新增中转站模型时，按上面这样补一个 `reasoningEfforts`，否则它将不可选。
 ## 许可
 
 MIT

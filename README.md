@@ -89,6 +89,45 @@ Please read these before installing — some materially affect whether you get t
 
 - **Unfinished marketplace-readiness work.** Configurable profile names, migrating capability config to the DSH Settings API, automated tests for GPT/Gemini/generic models, explicit error text when a gateway refuses a parameter, and removing the dependency on an early core-runtime patch are all still open.
 
+
+## Gateway compatibility
+
+This plugin only declares model capability; the actual request is sent by the host (`dsh-llm-pi-ai`) using the route's `api`. When a route uses `openai-responses`, DSH replays prior assistant messages as different `input` items, and the message items it builds carry a `status` field (e.g. `status: "completed"`), and reasoning items can carry `status` too.
+
+Some relays validate the Responses API request against a fixed schema and reject such fields as unknown parameters. A typical error looks like:
+
+```
+invalid_request_error: [ObjectParam] [input[148].status] [unknown_parameter] Unknown parameter: 'input[148].status'
+```
+
+If you hit this, it is a host/route-vs-gateway compatibility issue, not the plugin's fault. Options, in order of usefulness:
+
+- Switch the route's `api` to `openai-completions` (chat/completions) if the relay supports `/v1/chat/completions`; that request shape does not carry these item-level fields. Note the reasoning wire format changes, so re-confirm the levels still map correctly.
+- Upgrade or relax the gateway (a stale relay build that rejects `status` on Responses input items has been fixed upstream, e.g. in LiteLLM).
+- As a workaround, start a fresh session / keep history short so the offending item is not replayed.
+
+## FAQ / Troubleshooting
+
+- **Installed from npm but my models still show no reasoning level.** The npm install only registers the bundle. Run `enable-capabilities.ps1` for the target profile, then restart DSH.
+- **I picked a level and now get `invalid_request_error ... input[N].status`.** See Gateway compatibility above — it is a route/gateway field-compatibility issue, not the level mapping.
+- **Why do my relay GPT models have no reasoning level at all?** Models whose IDs are not in DSH's bundled catalog default to "no reasoning"; the helper adds the missing `reasoningEfforts` declaration. See "Why you need it".
+- **The default reasoning level is `medium`; how do I change it?** Edit the provider's `reasoning:` field in `~/.dsh/settings.yaml` (the helper sets it to `medium`, and it persists even after uninstall).
+- **I uninstalled but `reasoningEfforts` / `reasoning: medium` are still there.** The helper edits `settings.yaml` in place. Run `disable-capabilities.ps1` to remove the declarations the helper added.
+- **When is this plugin unnecessary?** When you use an official provider with standard catalog IDs (e.g. `gpt-5.4`, `o3`); those already declare reasoning.
+
+## Advanced: hand-tuning reasoningEfforts
+
+The level picker is driven entirely by the model's `reasoningEfforts`. You can edit `~/.dsh/settings.yaml` directly, e.g.:
+
+```yaml
+reasoningEfforts:
+  off: null
+  low: "low"
+  medium: "medium"
+  high: "high"
+```
+
+Each key is the logical level the picker shows; each value is the wire value the host sends for that level. `null` for `off` means "omit the reasoning parameter", `false` disables reasoning for that model. A model with an empty/absent `reasoningEfforts` keeps the host's default (which for a custom-gateway model is "no reasoning"), so if you add a new relay model by hand, give it a `reasoningEfforts` map as above or it will not be selectable.
 ## License
 
 MIT
