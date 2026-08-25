@@ -4,6 +4,12 @@
 
 插件为 DeepSeek Harness 中的 GPT、Codex、Gemini 和 OpenAI-compatible 模型按模型暴露推理等级（`off` / `minimal` / `low` / `medium` / `high` / `xhigh`），让自定义模型网关接入后也能选择合适的推理强度。
 
+# 效果图
+
+<img width="432" height="194" alt="image" src="https://github.com/user-attachments/assets/00198ec6-a8eb-4002-91b7-0149b8621f32" />
+注：原版导入其他模型无思考等级可选
+<img width="432" height="194" alt="image" src="https://github.com/user-attachments/assets/57aecb45-596c-40a2-96eb-f73db2fb0634" />
+
 ## 安装（插件市场）
 
 发布到 npm 后：
